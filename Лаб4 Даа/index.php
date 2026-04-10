@@ -1,0 +1,200 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * ============================================
+ * Массив транзакций
+ * ============================================
+ */
+
+$transactions = [
+    [
+        "id" => 1,
+        "date" => "2026-03-01",
+        "amount" => 120.50,
+        "description" => "Payment for groceries",
+        "merchant" => "SuperMart",
+    ],
+    [
+        "id" => 2,
+        "date" => "2026-02-20",
+        "amount" => 75.50,
+        "description" => "Dinner with friends",
+        "merchant" => "Local Restaurant",
+    ],
+    [
+        "id" => 3,
+        "date" => "2026-01-15",
+        "amount" => 15.99,
+        "description" => "Music subscription",
+        "merchant" => "Spotify",
+    ],
+];
+
+/**
+ * ============================================
+ * ФУНКЦИИ
+ * ============================================
+ */
+
+/**
+ * Подсчет общей суммы транзакций
+ */
+function calculateTotalAmount(array $transactions): float
+{
+    $sum = 0;
+
+    foreach ($transactions as $t) {
+        $sum += $t['amount'];
+    }
+
+    return $sum;
+}
+
+/**
+ * Поиск по части описания
+ */
+function findTransactionByDescription(string $descriptionPart): array
+{
+    global $transactions;
+
+    return array_filter(
+        $transactions,
+        fn($t) => stripos($t['description'], $descriptionPart) !== false
+    );
+}
+
+/**
+ * Поиск по ID (foreach)
+ */
+function findTransactionById(int $id): ?array
+{
+    global $transactions;
+
+    foreach ($transactions as $t) {
+        if ($t['id'] === $id) {
+            return $t;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Поиск по ID (array_filter — вариант на 10)
+ */
+function findTransactionByIdFilter(int $id): ?array
+{
+    global $transactions;
+
+    $result = array_filter(
+        $transactions,
+        fn($t) => $t['id'] === $id
+    );
+
+    return $result ? array_values($result)[0] : null;
+}
+
+/**
+ * Количество дней с момента транзакции
+ */
+function daysSinceTransaction(string $date): int
+{
+    $transactionDate = new DateTime($date);
+    $now = new DateTime();
+
+    return (int)$transactionDate->diff($now)->format('%a');
+}
+
+/**
+ * Добавление транзакции
+ */
+function addTransaction(
+    int $id,
+    string $date,
+    float $amount,
+    string $description,
+    string $merchant
+): void {
+    global $transactions;
+
+    $transactions[] = [
+        "id" => $id,
+        "date" => $date,
+        "amount" => $amount,
+        "description" => $description,
+        "merchant" => $merchant,
+    ];
+}
+
+/**
+ * ============================================
+ * Добавление новой транзакции
+ * ============================================
+ */
+
+addTransaction(4, "2026-03-10", 45.00, "Taxi ride", "CityTaxi");
+
+/**
+ * ============================================
+ * СОРТИРОВКА
+ * ============================================
+ */
+
+// по дате
+usort($transactions, function ($a, $b) {
+    return strtotime($a['date']) <=> strtotime($b['date']);
+});
+
+// по сумме (убывание)
+usort($transactions, function ($a, $b) {
+    return $b['amount'] <=> $a['amount'];
+});
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transactions</title>
+</head>
+<body>
+
+<h2>Список транзакций</h2>
+
+<table border="1" cellpadding="6">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Date</th>
+    <th>Amount</th>
+    <th>Description</th>
+    <th>Merchant</th>
+    <th>Days since</th>
+</tr>
+</thead>
+
+<tbody>
+
+<?php foreach ($transactions as $t): ?>
+<tr>
+    <td><?= $t['id'] ?></td>
+    <td><?= $t['date'] ?></td>
+    <td><?= $t['amount'] ?></td>
+    <td><?= $t['description'] ?></td>
+    <td><?= $t['merchant'] ?></td>
+    <td><?= daysSinceTransaction($t['date']) ?></td>
+</tr>
+<?php endforeach; ?>
+
+</tbody>
+</table>
+
+<h3>
+Общая сумма:
+<?= calculateTotalAmount($transactions) ?>
+</h3>
+
+</body>
+</html>
